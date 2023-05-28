@@ -45,7 +45,14 @@ private:
 	tile_data_t parent_generator_information;
 
 	// PROBABILITY MATRICES
-	Eigen::MatrixXf ENV_PREV_ENV_M;
+	Eigen::MatrixXf ENVxPREV_ENV_M;
+	Eigen::MatrixXf WEATHERxPREV_WEATHER_M;
+	Eigen::MatrixXf WEATHERxENV_M;
+	Eigen::MatrixXf DIFFxPREV_DIFF_M;
+	Eigen::MatrixXf DIFFxENV_M;
+	Eigen::MatrixXf DIFFxWEATHER_M;
+	Eigen::MatrixXf LOOTxPREV_LOOT_M;
+	Eigen::MatrixXf LOOTxDIFF_M;
 
 // INTERNAL FUNCTIONS
 	// gets tiles at r/c offset of a given array of tiles
@@ -60,16 +67,16 @@ private:
 	// calculate new random tile information and load it into given tile. Calls tile update method.
 	void generate_tile(ATile* tile);
 
-	// reads tile data from data tables and initalizes markov matrix data
-	void read_data();
+	// reads tile data from data table and initalize markov matrix data
+	void init_matrix_from_data(Eigen::MatrixXf* matrix, const TCHAR* utable_ref, int num_row, int num_col);
 
-	// store data table information inside matrix
+	// move data table information to matrix
 	void convert_data_table_to_matrix(Eigen::MatrixXf* M, UDataTable* T);
 
-	// get the probabilities given a state vector and determine the new state.
-	int markov(Eigen::MatrixXf* transition_matrix, Eigen::VectorXf* state_vector) const;
+	// read all the utable transition matrix data and store it in the appropirate matrix
+	void read_data();
 
-	//int make_random_selection(Eigen::VectorXf* probability_vector);
+	int make_random_selection(Eigen::VectorXf* probability_vector);
 
 
 

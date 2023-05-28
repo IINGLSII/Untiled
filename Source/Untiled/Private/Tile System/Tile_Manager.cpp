@@ -148,20 +148,21 @@ void ATile_Manager::generate_tile(ATile* tile)
 	data.setZero();
 
 	// current for state information of current tile
-	Eigen::VectorXf current_env(6);
-	current_env.setZero();
-	current_env[parent_generator_information[0]] = 1;
+	Eigen::VectorXf current(6);
+	current.setZero();
+	current[parent_generator_information[0]] = 1;
 
-
-	data[0] = markov(&ENV_PREV_ENV_M, &current_env);
+	Eigen::VectorXf temp(ENVxPREV_ENV_M.rows());
+	temp = ENVxPREV_ENV_M * current;
+	data[0] = make_random_selection(&temp);
 
 	tile->init(data, TILE_SIZE);
 	return;
 }
 
-void ATile_Manager::read_data() {
+void ATile_Manager::init_matrix_from_data(Eigen::MatrixXf* matrix, const TCHAR* utable_ref, int num_row, int num_col) {
 	// get data table object
-	static ConstructorHelpers::FObjectFinder<UDataTable> DataTableFinder(TEXT("DataTable'/Game/TileSystem/Data/P_Environment__Environment.P_Environment__Environment'"));
+	ConstructorHelpers::FObjectFinder<UDataTable> DataTableFinder(utable_ref);
 	UDataTable* DataTable;
 	if (DataTableFinder.Succeeded())
 		DataTable = DataTableFinder.Object;
@@ -172,16 +173,27 @@ void ATile_Manager::read_data() {
 	}
 
 	// initialize matrix and store information inside data table
-	ENV_PREV_ENV_M.resize(6, 6);
-	convert_data_table_to_matrix(&ENV_PREV_ENV_M, DataTable);
-	
+	matrix->resize(num_row, num_col);
+	convert_data_table_to_matrix(matrix, DataTable);
+	DataTableFinder.UnregisterGCObject();
 	return;
+}
+
+void ATile_Manager::read_data() {
+	init_matrix_from_data(&ENVxPREV_ENV_M, TEXT("DataTable'/Game/TileSystem/Data/P_Environment__Environment.P_Environment__Environment'"), 6, 6);
+	init_matrix_from_data(&WEATHERxPREV_WEATHER_M, TEXT("DataTable'/Game/TileSystem/Data/P_Weather__Weather.P_Weather__Weather'"), 4, 4);
+	init_matrix_from_data(&WEATHERxENV_M, TEXT("DataTable'/Game/TileSystem/Data/Environment__Weather.Environment__Weather'"), 4, 6);
+	init_matrix_from_data(&DIFFxPREV_DIFF_M, TEXT("DataTable'/Game/TileSystem/Data/P_Difficulty__Difficulty.P_Difficulty__Difficulty'"), 5, 5);
+	init_matrix_from_data(&DIFFxENV_M, TEXT("DataTable'/Game/TileSystem/Data/Environment__Difficulty.Environment__Difficulty'"), 5, 6);
+	init_matrix_from_data(&DIFFxWEATHER_M, TEXT("DataTable'/Game/TileSystem/Data/Weather__Difficulty.Weather__Difficulty'"), 5, 4);
+	init_matrix_from_data(&LOOTxPREV_LOOT_M, TEXT("DataTable'/Game/TileSystem/Data/P_LootCount__LootCount.P_LootCount__LootCount'"), 3, 3);
+	init_matrix_from_data(&LOOTxDIFF_M, TEXT("DataTable'/Game/TileSystem/Data/Difficulty__LootCount.Difficulty__LootCount'"), 3, 5);
 }
 
 void ATile_Manager::convert_data_table_to_matrix(Eigen::MatrixXf* M, UDataTable* T) {
 	M->setZero();
 
-	FString ContextString = FString(TEXT("Convert Data Table to Matrix"));
+	FString ContextString;
 	TArray<FName> RowNames = T->GetRowNames();
 
 	// iterate through rows inside data table and store float array information inside matrix
@@ -202,22 +214,17 @@ void ATile_Manager::convert_data_table_to_matrix(Eigen::MatrixXf* M, UDataTable*
 	return;
 }
 
-int ATile_Manager::markov(Eigen::MatrixXf* transition_matrix, Eigen::VectorXf* state_vector) const {
-	Eigen::VectorXf probability_vector = (*transition_matrix) * (*state_vector);
+
+int ATile_Manager::make_random_selection(Eigen::VectorXf* probability_vector) {
 	float value = FMath::FRandRange(0.0f, 1.0f);
 
-	// Determine selection from random value
 	int selection;
-	for (selection = 0; selection < probability_vector.size(); selection++) {
-		
-		if (value < probability_vector[selection]) {
+	for (selection = 0; selection < probability_vector->size(); selection++) {
+
+		if (value < (*probability_vector)[selection]) {
 			return selection;
 		}
-		value -= probability_vector[selection];
+		value -=  (*probability_vector)[selection];
 	}
-	
-	// Matrix values do not sum to 1, or random value is not in range(0,1)
-	if (GEngine)
-		GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Yellow, FString::Printf(TEXT("SHOULD NOT HAPPEN")));
 	return 0;
 }
