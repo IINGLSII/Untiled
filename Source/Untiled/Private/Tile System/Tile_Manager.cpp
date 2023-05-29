@@ -141,6 +141,10 @@ void ATile_Manager::populate_grid(bool flush_array)
 	}
 }
 
+void ATile_Manager::pnormalize_vector(Eigen::VectorXf* vector) {
+	*vector /= vector->sum();
+}
+
 void ATile_Manager::generate_tile(ATile* tile)
 {
 	// vector for tile state information
@@ -148,13 +152,62 @@ void ATile_Manager::generate_tile(ATile* tile)
 	data.setZero();
 
 	// current for state information of current tile
-	Eigen::VectorXf current(6);
-	current.setZero();
-	current[parent_generator_information[0]] = 1;
+	Eigen::VectorXf ENV(6);
+	Eigen::VectorXf WEATHER(4);
+	Eigen::VectorXf DIFF(5);
+	Eigen::VectorXf LOOT(3);
 
-	Eigen::VectorXf temp(ENVxPREV_ENV_M.rows());
-	temp = ENVxPREV_ENV_M * current;
-	data[0] = make_random_selection(&temp);
+	Eigen::VectorXf t1;
+	Eigen::VectorXf t2;
+	Eigen::VectorXf t3;
+
+	ENV.setZero();
+	WEATHER.setZero();
+	DIFF.setZero();
+	LOOT.setZero();
+
+	ENV[parent_generator_information[0]] = 1;
+	t1.resize(ENV.size());
+	t1 = ENVxPREV_ENV_M * ENV;
+	data[0] = make_random_selection(&t1);
+	ENV.setZero();
+	ENV[data[0]] = 1;
+
+	WEATHER[parent_generator_information[1]] = 1;
+	t1.resize(WEATHER.size());
+	t2.resize(WEATHER.size());
+	t1 = WEATHERxPREV_WEATHER_M * WEATHER;
+	t2 = WEATHERxENV_M * ENV;
+	t1 = t1.cwiseProduct(t2);
+	pnormalize_vector(&t1);
+	data[1] = make_random_selection(&t1);
+	WEATHER.setZero();
+	WEATHER[data[1]] = 1;
+
+	DIFF[parent_generator_information[2]] = 1;
+	t1.resize(DIFF.size());
+	t2.resize(DIFF.size());
+	t3.resize(DIFF.size());
+	t1 = DIFFxPREV_DIFF_M * DIFF;
+	t2 = DIFFxENV_M * ENV;
+	t3 = DIFFxWEATHER_M * WEATHER;
+	t1 = t1.cwiseProduct(t2);
+	t1 = t1.cwiseProduct(t3);
+	pnormalize_vector(&t1);
+	data[2] = make_random_selection(&t1);
+	DIFF.setZero();
+	DIFF[data[2]] = 1;
+
+	LOOT[parent_generator_information[3]] = 1;
+	t1.resize(LOOT.size());
+	t2.resize(LOOT.size());
+	t1 = LOOTxPREV_LOOT_M * LOOT;
+	t2 = LOOTxDIFF_M * DIFF;
+	t1 = t1.cwiseProduct(t2);
+	pnormalize_vector(&t1);
+	data[3] = make_random_selection(&t1);
+	LOOT.setZero();
+	LOOT[data[3]] = 1;
 
 	tile->init(data, TILE_SIZE);
 	return;

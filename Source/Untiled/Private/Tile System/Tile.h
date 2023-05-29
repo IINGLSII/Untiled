@@ -7,7 +7,7 @@
 #include <Eigen/Eigen/Core>
 #include "Tile.generated.h"
 
-#define NUM_FEATURES 5
+#define NUM_FEATURES 4
 
 typedef Eigen::Vector<uint8, NUM_FEATURES> tile_data_t;
 

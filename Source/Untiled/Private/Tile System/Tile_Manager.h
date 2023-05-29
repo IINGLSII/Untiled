@@ -78,6 +78,8 @@ private:
 
 	int make_random_selection(Eigen::VectorXf* probability_vector);
 
+	void pnormalize_vector(Eigen::VectorXf* vector);
+
 
 
 // PURE FUNCTIONS
