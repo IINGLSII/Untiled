@@ -10,7 +10,7 @@
 #include "Tile_Manager.generated.h"
 
 #define GRID_DIM 3
-#define TILE_SIZE 500
+#define TILE_SIZE 1200
 
 USTRUCT(BlueprintType) 
 struct FRow : public FTableRowBase 
