@@ -12,10 +12,10 @@ struct FCharacterInfo {
 	GENERATED_BODY()
 
 public:
-	UPROPERTY(BlueprintReadOnly)
+	UPROPERTY(EditDefaultsOnly, Category = CharacterInfo)
 	uint8 health;
 
-	UPROPERTY(BlueprintReadOnly)
+	UPROPERTY(EditDefaultsOnly, Category = CharacterInfo)
 	FString name;
 };
 
@@ -27,15 +27,15 @@ class ACharacter_Base : public ACharacter, public IDamageable
 public:
 	// Sets default values for this character's properties
 	ACharacter_Base();
-
+	
+	// 
 protected:
 
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = CharacterSystem, meta = (AllowPrivateAccess = "true"))
+	UPROPERTY(EditDefaultsOnly, Category = Gameplay, meta = (AllowPrivateAccess = "true"))
 	FCharacterInfo char_info;
 
-	UPROPERTY(EditDefaultsOnly, Category = CharacterSystem, meta = (AllowPrivateAccess = "true"))
+	UPROPERTY(EditDefaultsOnly, Category = Gameplay, meta = (AllowPrivateAccess = "true"))
 	class UAnimationAsset* death_animation;
-
 
 protected:
 	// Called when the game starts or when spawned
@@ -43,6 +43,9 @@ protected:
 
 	// pure virtual : called when health is reduced to 0
 	virtual void die();
+
+	// Called to bind functionality to input
+	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent);
 
 public:
 	// returns copy of char_info
@@ -54,8 +57,5 @@ public:
 
 	// Called every frame
 	virtual void Tick(float DeltaTime);
-
-	// Called to bind functionality to input
-	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent);
 
 };

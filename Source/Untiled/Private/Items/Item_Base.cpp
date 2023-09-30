@@ -18,10 +18,39 @@ void AItem_Base::BeginPlay()
 	
 }
 
+EGripType AItem_Base::get_grip_type()
+{
+	return grip_type;
+}
+
 // Called every frame
 void AItem_Base::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
+}
+
+void AItem_Base::interact_Implementation(AActor* instigator)
+{
+	UEquipable* inventory = Cast<UEquipable>(instigator->GetComponentByClass(UEquipable::StaticClass()));
+	if (inventory) {
+		inventory->equip_item(this);
+	}
+	inventory->set_grip_type(grip_type);
+	
+}
+
+void AItem_Base::Use(ACharacter_Base* caller)
+{
+
+}
+
+void AItem_Base::AltUse(ACharacter_Base* caller)
+{
+
+}
+
+void AItem_Base::Drop(ACharacter_Base* caller)
+{
 }
 

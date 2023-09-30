@@ -2,18 +2,11 @@
 
 
 #include "Character System/Character_Player.h"
-#include "Camera/CameraComponent.h"
-#include "Components/CapsuleComponent.h"
-#include "Components/InputComponent.h"
-#include "GameFramework/CharacterMovementComponent.h"
-#include "GameFramework/Controller.h"
-#include "GameFramework/SpringArmComponent.h"
-#include "EnhancedInputComponent.h"
-#include "EnhancedInputSubsystems.h"
 
 ACharacter_Player::ACharacter_Player() {
 	// Set size for collision capsule
 	GetCapsuleComponent()->InitCapsuleSize(42.f, 96.0f);
+
 
 	// Don't rotate when the controller rotates. Let that just affect the camera.
 	bUseControllerRotationPitch = false;
@@ -38,13 +31,43 @@ ACharacter_Player::ACharacter_Player() {
 	CameraBoom->TargetArmLength = 400.0f; // The camera follows at this distance behind the character	
 	CameraBoom->bUsePawnControlRotation = true; // Rotate the arm based on the controller
 
+	// Create Interaction Component and Interaction Collision
+	Interactive = CreateDefaultSubobject<UInteractive>(TEXT("Interactive"));
+	InteractionBoundary = CreateDefaultSubobject<UCapsuleComponent>(TEXT("InteractionBoundary"));
+	InteractionBoundary->SetupAttachment(RootComponent);
+	Interactive->SetupCollision(InteractionBoundary);
+
+	// Add Combat Component (Tracing)
+	CombatComponent = CreateDefaultSubobject<UCombat>(TEXT("CombatComponent"));
+
+	// Equipment Component (Ablt to equip items)
+	Equipment = CreateDefaultSubobject<UEquipable>(TEXT("Equipment"));
+	Equipment->equip_item_delegate.BindUFunction(this, FName("equip_item"));
+	Equipment->drop_item_delegate.BindUFunction(this, FName("drop_item"));
+
 	// Create a follow camera
 	FollowCamera = CreateDefaultSubobject<UCameraComponent>(TEXT("FollowCamera"));
 	FollowCamera->SetupAttachment(CameraBoom, USpringArmComponent::SocketName); // Attach the camera to the end of the boom and let the boom adjust to match the controller orientation
 	FollowCamera->bUsePawnControlRotation = false; // Camera does not rotate relative to arm
 
+	
+
 	// Note: The skeletal mesh and anim blueprint references on the Mesh component (inherited from Character) 
 	// are set in the derived blueprint asset named ThirdPersonCharacter (to avoid direct content references in C++)
+}
+
+void ACharacter_Player::equip_item(AItem_Base* item)
+{
+	// if item is not null, attach to equip socket
+	if (item) 
+		item->AttachToComponent(GetMesh(), FAttachmentTransformRules(EAttachmentRule::SnapToTarget, true), FName("equipSocket"));
+}
+
+void ACharacter_Player::drop_item(AItem_Base* item)
+{
+	if (item) {
+		item->DetachFromActor(FDetachmentTransformRules(EDetachmentRule::KeepWorld, false));
+	}
 }
 
 void ACharacter_Player::Move(const FInputActionValue& Value)
@@ -72,14 +95,18 @@ void ACharacter_Player::Move(const FInputActionValue& Value)
 
 void ACharacter_Player::Use(const FInputActionValue& Value)
 {
-	if (GEngine)
-		GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Yellow, FString::Printf(TEXT("Attack")));
+	// use equipped item
+	AItem_Base* item = Equipment->get_equipped_item();
+	if (item)
+		item->Use(this);
 }
 
 void ACharacter_Player::AltUse(const FInputActionValue& Value)
 {
-	if (GEngine)
-		GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Yellow, FString::Printf(TEXT("Alt Attack")));
+	// use alternate usage for item
+	AItem_Base* item = Equipment->get_equipped_item();
+	if (item)
+		item->AltUse(this);
 }
 
 void ACharacter_Player::Dodge(const FInputActionValue& Value)
@@ -88,23 +115,31 @@ void ACharacter_Player::Dodge(const FInputActionValue& Value)
 		GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Yellow, FString::Printf(TEXT("Dodge")));
 }
 
-void ACharacter_Player::Interact(const FInputActionValue& Value)
-{
-	if (GEngine)
-		GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Yellow, FString::Printf(TEXT("Interact")));
+void ACharacter_Player::LeftItemSelect(const FInputActionValue& Value) { ACharacter_Player::ItemSelect(&item_slot1, FName("item1Socket"));
 }
 
-void ACharacter_Player::ItemSelect(const FInputActionValue& Value)
-{
-	if (GEngine)
-		GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Yellow, FString::Printf(TEXT("Item %f Select"), Value.Get<float>()));
+void ACharacter_Player::RightItemSelect(const FInputActionValue& Value) { ACharacter_Player::ItemSelect(&item_slot2, FName("item2Socket"));
 }
 
-void ACharacter_Player::ItemDrop(const FInputActionValue& Value)
+void ACharacter_Player::ItemSelect(AItem_Base** item, FName socketName)
 {
-	if (GEngine)
-		GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Yellow, FString::Printf(TEXT("Item Drop")));
+	// swap new and old item references
+	AItem_Base* new_equipped_item = *item;
+	AItem_Base* old_equipped_item = Equipment->get_equipped_item();
+	Equipment->equip_item(new_equipped_item);
+	*item = old_equipped_item;
+	
+	// if item is not null, attach old item to character belt
+	if(old_equipped_item)
+		old_equipped_item->AttachToComponent(GetMesh(), FAttachmentTransformRules(EAttachmentRule::SnapToTarget, true), socketName);
+	// if new item is not null, attach to equip socket (hands)
+	if (new_equipped_item) {
+		new_equipped_item->AttachToComponent(GetMesh(), FAttachmentTransformRules(EAttachmentRule::SnapToTarget, true), FName("equipSocket"));
+		Equipment->set_grip_type(new_equipped_item->get_grip_type());
+	}
 }
+
+void ACharacter_Player::ItemDrop(const FInputActionValue& Value) { Equipment->drop_equipped_item(); }
 
 void ACharacter_Player::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 {
@@ -123,10 +158,13 @@ void ACharacter_Player::SetupPlayerInputComponent(UInputComponent* PlayerInputCo
 		EnhancedInputComponent->BindAction(DodgeAction, ETriggerEvent::Triggered, this, &ACharacter_Player::Dodge);
 
 		//Interact
-		EnhancedInputComponent->BindAction(InteractAction, ETriggerEvent::Triggered, this, &ACharacter_Player::Interact);
+		EnhancedInputComponent->BindAction(InteractAction, ETriggerEvent::Triggered, Interactive, &UInteractive::interact);
 
-		//Item Select
-		EnhancedInputComponent->BindAction(ItemSelectAction, ETriggerEvent::Triggered, this, &ACharacter_Player::ItemSelect);
+		//Left Item Select
+		EnhancedInputComponent->BindAction(LeftItemSelectAction, ETriggerEvent::Triggered, this, &ACharacter_Player::LeftItemSelect);
+
+		//Right Item Select
+		EnhancedInputComponent->BindAction(RightItemSelectAction, ETriggerEvent::Triggered, this, &ACharacter_Player::RightItemSelect);
 
 		//Item Drop
 		EnhancedInputComponent->BindAction(ItemDropAction, ETriggerEvent::Triggered, this, &ACharacter_Player::ItemDrop);

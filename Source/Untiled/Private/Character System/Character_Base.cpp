@@ -23,10 +23,11 @@ ACharacter_Base::ACharacter_Base()
 void ACharacter_Base::take_damage(uint8 damage)
 {
 	char_info.health = char_info.health - damage > 0 ? char_info.health - damage : 0;
-
+	if (GEngine)
+		GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Yellow, FString::Printf(TEXT("Health %d"), char_info.health));
 	if (char_info.health)
 		return;
-
+	
 	die();
 }
 

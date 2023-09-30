@@ -5,12 +5,25 @@
 #include "CoreMinimal.h"
 #include "Character System/Character_Base.h"
 #include "InputActionValue.h"
-#include "../Items/Item_Base.h"
+#include "Components/Interactive.h"
+#include "Components/Combat.h"
+#include "Items/Item_Base.h"
+#include "Components/InputComponent.h"
+#include "EnhancedInputComponent.h"
+#include "EnhancedInputSubsystems.h"
+#include "Camera/CameraComponent.h"
+#include "GameFramework/CharacterMovementComponent.h"
+#include "GameFramework/Controller.h"
+#include "GameFramework/SpringArmComponent.h"
 #include "Character_Player.generated.h"
 
 /**
  * 
  */
+
+
+
+
 UCLASS()
 class ACharacter_Player : public ACharacter_Base
 {
@@ -18,11 +31,26 @@ class ACharacter_Player : public ACharacter_Base
 
 	/** Camera boom positioning the camera behind the character */
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess = "true"))
-	class USpringArmComponent* CameraBoom;
+		class USpringArmComponent* CameraBoom;
 
 	/** Follow camera */
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess = "true"))
 		class UCameraComponent* FollowCamera;
+
+	/** Interact Component */
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Gameplay, meta = (AllowPrivateAccess = "true"))
+		class UInteractive* Interactive;
+
+	/** Interact Component */
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Gameplay, meta = (AllowPrivateAccess = "true"))
+		class UCombat* CombatComponent;
+
+	/** Interact Component */
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Gameplay, meta = (AllowPrivateAccess = "true"))
+		class UEquipable* Equipment;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Gameplay, meta = (AllowPrivateAccess = "true"))
+		class UCapsuleComponent* InteractionBoundary;
 
 	/** MappingContext */
 	UPROPERTY(EditDefaultsOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
@@ -48,26 +76,36 @@ class ACharacter_Player : public ACharacter_Base
 	UPROPERTY(EditDefaultsOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
 		class UInputAction* InteractAction;
 
-	/** Item Select Input Action */
+	/** Left Item Select Input Action */
 	UPROPERTY(EditDefaultsOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
-		class UInputAction* ItemSelectAction;
+		class UInputAction* LeftItemSelectAction;
+
+	/** Right Item Select Input Action */
+	UPROPERTY(EditDefaultsOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
+		class UInputAction* RightItemSelectAction;
 
 	/** Item Drop Input Action */
 	UPROPERTY(EditDefaultsOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
 		class UInputAction* ItemDropAction;
 
 	protected:
+	/* Item stored in item slot 1*/
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Items)
-		class AItem_Base* equipped_item;
+		AItem_Base* item_slot1;
 
+	/* Item stored in item slot 2*/
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Items)
-		class AItem_Base* item_slot1;
-
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Items)
-		class AItem_Base* item_slot2;
+		AItem_Base* item_slot2;
 
 	public:
 		ACharacter_Player();
+
+		// Delegate functions from Inventory
+		UFUNCTION()
+		void equip_item(AItem_Base* item);
+
+		UFUNCTION()
+		void drop_item(AItem_Base* item);
 
 	protected:
 		/** Called for movement input */
@@ -82,14 +120,15 @@ class ACharacter_Player : public ACharacter_Base
 		/** Called for dodge input */
 		void Dodge(const FInputActionValue& Value);
 
-		/** Called for interact input */
-		void Interact(const FInputActionValue& Value);
+		/** Called for left item select input */
+		void LeftItemSelect(const FInputActionValue& Value);
 
-		/** Called for interact input */
-		void ItemSelect(const FInputActionValue& Value);
+		/** Called for right iten select input */
+		void RightItemSelect(const FInputActionValue& Value);
 
 		/** Called for interact input */
 		void ItemDrop(const FInputActionValue& Value);
+
 
 	protected:
 		// APawn interface
@@ -97,6 +136,12 @@ class ACharacter_Player : public ACharacter_Base
 
 		// To add mapping context
 		virtual void BeginPlay() override;
+
+		// Called when any item is selected
+		void ItemSelect(AItem_Base** item, FName socketName);
+
+	private:
+		
 
 	public:
 		/** Returns CameraBoom subobject **/
