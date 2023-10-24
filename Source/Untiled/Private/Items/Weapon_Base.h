@@ -39,6 +39,9 @@ protected:
 	UPROPERTY(EditDefaultsOnly, Category = Weapon)
 	UStaticMeshComponent* weapon_mesh;
 
+	UFUNCTION(BlueprintCallable)
+	void launch_target(AActor* target, float x_force, float y_force);
+
 private:
 	// ref to owning character's combat component
 	UPROPERTY()

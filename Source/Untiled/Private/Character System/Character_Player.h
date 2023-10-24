@@ -8,9 +8,6 @@
 #include "Components/Interactive.h"
 #include "Components/Combat.h"
 #include "Items/Item_Base.h"
-#include "Components/InputComponent.h"
-#include "EnhancedInputComponent.h"
-#include "EnhancedInputSubsystems.h"
 #include "Camera/CameraComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "GameFramework/Controller.h"
@@ -51,6 +48,9 @@ class ACharacter_Player : public ACharacter_Base
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Gameplay, meta = (AllowPrivateAccess = "true"))
 		class UCapsuleComponent* InteractionBoundary;
+
+	UPROPERTY(EditDefaultsOnly, Category = Gameplay, meta = (AllowPrivateAccess = "true"))
+		UAnimMontage* dodge_animation;
 
 	/** MappingContext */
 	UPROPERTY(EditDefaultsOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
@@ -108,8 +108,6 @@ class ACharacter_Player : public ACharacter_Base
 		void drop_item(AItem_Base* item);
 
 	protected:
-		/** Called for movement input */
-		void Move(const FInputActionValue& Value);
 
 		/** Called for attack input */
 		void Use(const FInputActionValue& Value);

@@ -9,7 +9,7 @@
 #include "Combat.generated.h"
 
 #define TRACE_TIME_INC 0.015625
-#define ATTACK_DELAY 0.1
+#define ATTACK_DELAY 0.2
 DECLARE_DELEGATE_OneParam(FOnHitDelegate, AActor*)
 
 UENUM(BlueprintType)
@@ -27,6 +27,9 @@ public:
 	// attack speed (detection % per second)
 	UPROPERTY(EditDefaultsOnly)
 	float attack_speed;
+
+	UPROPERTY(EditDefaultsOnly)
+	float movement_speed;
 
 	// parameter for line trace (trace distance)
 	UPROPERTY(EditDefaultsOnly)
@@ -50,7 +53,6 @@ public:
 
 	UPROPERTY(EditDefaultsOnly)
 	UAnimMontage* attack_anim_right;
-
 };
 
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
@@ -113,5 +115,8 @@ public:
 
 	UFUNCTION()
 	void reset_attack();
+
+	UFUNCTION()
+	void disable_attack();
 
 };

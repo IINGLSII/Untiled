@@ -51,7 +51,7 @@ ACharacter_Player::ACharacter_Player() {
 	FollowCamera->bUsePawnControlRotation = false; // Camera does not rotate relative to arm
 
 	
-
+	GetCharacterMovement()->MaxWalkSpeed = base_movement_speed;
 	// Note: The skeletal mesh and anim blueprint references on the Mesh component (inherited from Character) 
 	// are set in the derived blueprint asset named ThirdPersonCharacter (to avoid direct content references in C++)
 }
@@ -67,29 +67,6 @@ void ACharacter_Player::drop_item(AItem_Base* item)
 {
 	if (item) {
 		item->DetachFromActor(FDetachmentTransformRules(EDetachmentRule::KeepWorld, false));
-	}
-}
-
-void ACharacter_Player::Move(const FInputActionValue& Value)
-{
-	// input is a Vector2D
-	FVector2D MovementVector = Value.Get<FVector2D>();
-
-	if (Controller != nullptr)
-	{
-		// find out which way is forward
-		const FRotator Rotation = Controller->GetControlRotation();
-		const FRotator YawRotation(0, Rotation.Yaw, 0);
-
-		// get forward vector
-		const FVector ForwardDirection = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::X);
-
-		// get right vector 
-		const FVector RightDirection = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::Y);
-
-		// add movement 
-		AddMovementInput(ForwardDirection, MovementVector.Y);
-		AddMovementInput(RightDirection, MovementVector.X);
 	}
 }
 
@@ -113,6 +90,8 @@ void ACharacter_Player::Dodge(const FInputActionValue& Value)
 {
 	if (GEngine)
 		GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Yellow, FString::Printf(TEXT("Dodge")));
+	SetActorRotation(GetCharacterMovement()->GetLastInputVector().Rotation());
+	PlayAnimMontage(dodge_animation);
 }
 
 void ACharacter_Player::LeftItemSelect(const FInputActionValue& Value) { ACharacter_Player::ItemSelect(&item_slot1, FName("item1Socket"));

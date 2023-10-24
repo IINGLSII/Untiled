@@ -43,6 +43,7 @@ void UCombat::attack(FAttackInfo& attack_info, FVector location)
 	}
 	can_attack = false;
 	Cast<ACharacter_Base>(GetOwner())->PlayAnimMontage(dir > 0 ? attack_info.attack_anim_left : attack_info.attack_anim_right);
+	Cast<ACharacter_Base>(GetOwner())->GetCharacterMovement()->MaxWalkSpeed = attack_info.movement_speed;
 }
 
 void UCombat::increment_trace()
@@ -82,14 +83,14 @@ void UCombat::radial_attack_trace(FAttackInfo& attack_info, float trace_param_in
 void UCombat::run_trace(FVector start, FVector end_offset) {
 	FHitResult trace_result;
 	GetWorld()->LineTraceSingleByChannel(trace_result, start, start + end_offset, ECollisionChannel::ECC_WorldDynamic, hit_trace_params);
-	DrawDebugPoint(GetWorld(), trace_result.TraceEnd, 15.0f, trace_result.bBlockingHit ? FColor::Blue : FColor::Red, false, 1.0f, 0);
+	DrawDebugLine(GetWorld(), start, trace_result.TraceEnd, trace_result.bBlockingHit ? FColor::Blue : FColor::Red, false, 1, 0);
 	hit_registration(trace_result);
 	increment_trace();
 }
 
 int8 UCombat::get_left_right(AActor* actor)
 {
-	float ang_v = Cast<ACharacter>(actor)->GetMesh()->GetPhysicsAngularVelocityInDegrees().Z;
+	float ang_v = Cast<ACharacter>(actor)->GetMovementBase()->GetPhysicsAngularVelocityInDegrees("Root").Z;
 	if (GEngine)
 		GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Yellow, FString::Printf(TEXT("ang_v = %f"), ang_v));
 
@@ -114,15 +115,23 @@ void UCombat::hit_registration(FHitResult& hit_result)
 
 void UCombat::reset_attack()
 {
-	// Remove timers set on delegate and enable attacking
-	GetOwner()->GetWorldTimerManager().SetTimer(trace_timer_handle, trace_timer_delegate, 0, false);
-	can_attack = true;
-
+	if (GEngine)
+		GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Yellow, FString::Printf(TEXT("Reset")));
 	// Remove any timers on this component
 	GetOwner()->GetWorldTimerManager().ClearAllTimersForObject(this);
 	
 	// Setup tracing parameters
 	hit_trace_params.ClearIgnoredActors();
 	hit_trace_params.AddIgnoredActor(GetOwner());
+
+	Cast<ACharacter_Base>(GetOwner())->reset_movement_speed();
+	// enable attacking
+	can_attack = true;
+}
+
+void UCombat::disable_attack()
+{
+	can_attack = false;
+	GetOwner()->GetWorldTimerManager().ClearAllTimersForObject(this);
 }
 
