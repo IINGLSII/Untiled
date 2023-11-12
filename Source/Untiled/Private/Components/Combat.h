@@ -9,8 +9,9 @@
 #include "Combat.generated.h"
 
 #define TRACE_TIME_INC 0.015625
-#define ATTACK_DELAY 0.2
+#define ATTACK_DELAY 0.15
 DECLARE_DELEGATE_OneParam(FOnHitDelegate, AActor*)
+DECLARE_DELEGATE(FAttackResetDelegate)
 
 UENUM(BlueprintType)
 enum class EHitDetectionType : uint8 {			// params:
@@ -27,9 +28,6 @@ public:
 	// attack speed (detection % per second)
 	UPROPERTY(EditDefaultsOnly)
 	float attack_speed;
-
-	UPROPERTY(EditDefaultsOnly)
-	float movement_speed;
 
 	// parameter for line trace (trace distance)
 	UPROPERTY(EditDefaultsOnly)
@@ -49,10 +47,7 @@ public:
 
 	// attack animations played
 	UPROPERTY(EditDefaultsOnly)
-	UAnimMontage* attack_anim_left;
-
-	UPROPERTY(EditDefaultsOnly)
-	UAnimMontage* attack_anim_right;
+	UAnimMontage* attack_anim;
 };
 
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
@@ -66,6 +61,8 @@ public:
 
 	// callback for when trace hits an actor
 	FOnHitDelegate on_hit_delegate;
+
+	FAttackResetDelegate attack_reset_delegate;
 
 private:
 	// Trace Collision parameters
@@ -83,12 +80,6 @@ private:
 	// whether the character is able to attack
 	bool can_attack = true;
 
-	// direction of current/most recent attack
-	int dir = 1;
-
-	// decreases traces remaining and resets attack if <= 0
-	void increment_trace();
-
 private:
 	// Cone Trace (radius, degrees)
 	UFUNCTION()
@@ -105,18 +96,17 @@ private:
 	// runs trace from start to end and registers hit
 	UFUNCTION()
 		void run_trace(FVector start, FVector end_offset);
-	// sets and returns direction of attack
-	int8 get_left_right(AActor*);
 
+	// decreases traces remaining and resets attack if <= 0
+	void increment_trace();
+
+	UFUNCTION()
+		void end_attack();
 
 public:
 	UFUNCTION()
-	void attack(FAttackInfo& attack_info, FVector location);
+	void attack_trace(FAttackInfo& attack_info, FVector location);
 
 	UFUNCTION()
-	void reset_attack();
-
-	UFUNCTION()
-	void disable_attack();
-
+	void finish_trace();
 };

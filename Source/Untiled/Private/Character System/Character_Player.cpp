@@ -50,7 +50,7 @@ ACharacter_Player::ACharacter_Player() {
 	FollowCamera->SetupAttachment(CameraBoom, USpringArmComponent::SocketName); // Attach the camera to the end of the boom and let the boom adjust to match the controller orientation
 	FollowCamera->bUsePawnControlRotation = false; // Camera does not rotate relative to arm
 
-	
+	action_cooldown_delegate.BindUFunction(this,FName("finish_action"));
 	GetCharacterMovement()->MaxWalkSpeed = base_movement_speed;
 	// Note: The skeletal mesh and anim blueprint references on the Mesh component (inherited from Character) 
 	// are set in the derived blueprint asset named ThirdPersonCharacter (to avoid direct content references in C++)
@@ -59,8 +59,10 @@ ACharacter_Player::ACharacter_Player() {
 void ACharacter_Player::equip_item(AItem_Base* item)
 {
 	// if item is not null, attach to equip socket
-	if (item) 
+	if (item) {
 		item->AttachToComponent(GetMesh(), FAttachmentTransformRules(EAttachmentRule::SnapToTarget, true), FName("equipSocket"));
+		item->item_finish_delegate.BindUFunction(this,FName("finish_action"));
+	}
 }
 
 void ACharacter_Player::drop_item(AItem_Base* item)
@@ -73,25 +75,38 @@ void ACharacter_Player::drop_item(AItem_Base* item)
 void ACharacter_Player::Use(const FInputActionValue& Value)
 {
 	// use equipped item
-	AItem_Base* item = Equipment->get_equipped_item();
-	if (item)
-		item->Use(this);
+	if(bcan_act){
+		AItem_Base* item = Equipment->get_equipped_item();
+		if (item) {
+			item->Use(this);
+			bcan_act = false;
+		}
+			
+	}
 }
 
 void ACharacter_Player::AltUse(const FInputActionValue& Value)
 {
 	// use alternate usage for item
-	AItem_Base* item = Equipment->get_equipped_item();
-	if (item)
-		item->AltUse(this);
+	if (bcan_act) {
+		AItem_Base* item = Equipment->get_equipped_item();
+		if (item) {
+			item->AltUse(this);
+			bcan_act = false;
+		}
+	}
 }
 
 void ACharacter_Player::Dodge(const FInputActionValue& Value)
 {
-	if (GEngine)
-		GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Yellow, FString::Printf(TEXT("Dodge")));
-	SetActorRotation(GetCharacterMovement()->GetLastInputVector().Rotation());
-	PlayAnimMontage(dodge_animation);
+	if (bcan_act) {
+		if (GEngine)
+			GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Yellow, FString::Printf(TEXT("Dodge")));
+		bcan_act = false;
+		SetActorRotation(GetCharacterMovement()->GetLastInputVector().Rotation());
+		PlayAnimMontage(dodge_animation);
+		GetWorld()->GetTimerManager().SetTimer(action_cooldown, action_cooldown_delegate, 1, 0, 0.5);
+	}
 }
 
 void ACharacter_Player::LeftItemSelect(const FInputActionValue& Value) { ACharacter_Player::ItemSelect(&item_slot1, FName("item1Socket"));
@@ -116,6 +131,13 @@ void ACharacter_Player::ItemSelect(AItem_Base** item, FName socketName)
 		new_equipped_item->AttachToComponent(GetMesh(), FAttachmentTransformRules(EAttachmentRule::SnapToTarget, true), FName("equipSocket"));
 		Equipment->set_grip_type(new_equipped_item->get_grip_type());
 	}
+}
+
+void ACharacter_Player::finish_action()
+{
+	if (GEngine)
+		GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Yellow, FString::Printf(TEXT("ACTION FINISH")));
+	bcan_act = true;
 }
 
 void ACharacter_Player::ItemDrop(const FInputActionValue& Value) { Equipment->drop_equipped_item(); }

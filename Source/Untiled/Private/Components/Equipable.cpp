@@ -32,7 +32,7 @@ void UEquipable::drop_equipped_item()
 {
 	drop_item_delegate.ExecuteIfBound(equipped_item);
 	equipped_item = NULL;
-	grip_type = EGripType::HandsDown;
+	set_grip_type(EGripType::NONE);
 }
 
 void UEquipable::equip_item(AItem_Base* item)

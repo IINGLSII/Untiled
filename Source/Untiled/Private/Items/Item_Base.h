@@ -8,6 +8,8 @@
 #include "components/Equipable.h"
 #include "Item_Base.generated.h"
 
+DECLARE_DELEGATE(FItemUseFinishDelegate)
+
 UCLASS()
 class AItem_Base : public AActor, public IInteractable
 {
@@ -17,9 +19,14 @@ public:
 	// Sets default values for this actor's properties
 	AItem_Base();
 
+	FItemUseFinishDelegate item_finish_delegate;
+
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
+
+	UFUNCTION()
+	void finish_use();
 
 	UPROPERTY(EditDefaultsOnly)
 	EGripType grip_type;

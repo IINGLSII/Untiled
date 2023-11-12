@@ -13,11 +13,10 @@ DECLARE_DELEGATE_OneParam(FEquipableDelegate, AItem_Base*);
 
 UENUM(BlueprintType)
 enum class EGripType : uint8 {			// params:
-	HandsDown = 0		UMETA(DisplayName = "HandsDown"),
-	OneHanded = 1		UMETA(DisplayName = "OneHanded"),
-	TwoHanded = 2		UMETA(DisplayName = "TwoHanded"),
-	OneHandedUtil = 3	UMETA(DisplayName = "OneHandedUtil"),
-	TwoHandedUtil = 4	UMETA(DisplayName = "TwoHandedUtil")
+	NONE = 0		UMETA(DisplayName = "NONE"),
+	H1 = 1		UMETA(DisplayName = "H1"),
+	H2 = 2		UMETA(DisplayName = "H2"),
+	OTHER = 3	UMETA(DisplayName = "OTHER")
 };
 
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )

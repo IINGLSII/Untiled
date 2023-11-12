@@ -12,14 +12,14 @@ struct FWeaponInfo {
 	GENERATED_BODY()
 
 	public:
-		UPROPERTY()
+		UPROPERTY(EditDefaultsOnly)
 		int8 damage;
 
 		UPROPERTY(EditDefaultsOnly)
-		FAttackInfo attack_info;
+		TArray<FAttackInfo> attack_info;
 
 		UPROPERTY(EditDefaultsOnly)
-		FAttackInfo alt_attack_info;
+		TArray<FAttackInfo> alt_attack_info;
 };
 
 UCLASS()
@@ -46,6 +46,9 @@ private:
 	// ref to owning character's combat component
 	UPROPERTY()
 	UCombat* combat_component;
+
+	UPROPERTY()
+	uint8 combo_counter = 0;
 
 public:
 	// Item event, called when using the weapon

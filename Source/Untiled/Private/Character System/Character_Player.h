@@ -18,9 +18,6 @@
  * 
  */
 
-
-
-
 UCLASS()
 class ACharacter_Player : public ACharacter_Base
 {
@@ -97,6 +94,13 @@ class ACharacter_Player : public ACharacter_Base
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Items)
 		AItem_Base* item_slot2;
 
+	private:
+	UPROPERTY()
+		bool bcan_act = true;
+
+		FTimerDelegate action_cooldown_delegate;
+		FTimerHandle action_cooldown;
+
 	public:
 		ACharacter_Player();
 
@@ -139,7 +143,8 @@ class ACharacter_Player : public ACharacter_Base
 		void ItemSelect(AItem_Base** item, FName socketName);
 
 	private:
-		
+		UFUNCTION()
+		void finish_action();
 
 	public:
 		/** Returns CameraBoom subobject **/

@@ -42,15 +42,18 @@ void AItem_Base::interact_Implementation(AActor* instigator)
 
 void AItem_Base::Use(ACharacter_Base* caller)
 {
-
+	finish_use();
 }
 
 void AItem_Base::AltUse(ACharacter_Base* caller)
 {
-
+	finish_use();
 }
 
 void AItem_Base::Drop(ACharacter_Base* caller)
 {
 }
 
+void AItem_Base::finish_use() {
+	item_finish_delegate.ExecuteIfBound();
+}

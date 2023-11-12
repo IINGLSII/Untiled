@@ -21,18 +21,25 @@ void AWeapon_Base::launch_target(AActor* target, float x_force, float y_force)
 void AWeapon_Base::Use(ACharacter_Base* caller)
 {
 	// Start attack tracing, bind On-Hit to trace
-	if (combat_component) {
+	if (combat_component && !(weapon_info.attack_info.IsEmpty())) {
+		combo_counter %= weapon_info.attack_info.Num();
 		combat_component->on_hit_delegate.BindUFunction(this, FName("on_hit"));
-		combat_component->attack(weapon_info.attack_info, caller->GetActorLocation());
+		combat_component->attack_reset_delegate.BindUFunction(this, FName("finish_use"));
+		combat_component->attack_trace(weapon_info.attack_info[combo_counter], caller->GetActorLocation());
+		combo_counter++;
 	}
+	else
+		finish_use();
 }
 
 void AWeapon_Base::AltUse(ACharacter_Base* caller)
 {
 	// Start attack tracing, bind On-Hit to trace
 	if (combat_component) {
+		combo_counter %= weapon_info.alt_attack_info.Num();
 		combat_component->on_hit_delegate.BindUFunction(this, FName("on_hit"));
-		combat_component->attack(weapon_info.alt_attack_info, caller->GetActorLocation());
+		combat_component->attack_trace(weapon_info.alt_attack_info[0], caller->GetActorLocation());
+		combo_counter++;
 	}
 }
 
