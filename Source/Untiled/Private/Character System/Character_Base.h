@@ -17,10 +17,10 @@ struct FCharacterInfo {
 
 public:
 	UPROPERTY(EditDefaultsOnly, Category = CharacterInfo)
-	uint8 health;
+	uint8 Health;
 
 	UPROPERTY(EditDefaultsOnly, Category = CharacterInfo)
-	FString name;
+	FString Name;
 };
 
 UCLASS()
@@ -31,25 +31,31 @@ class ACharacter_Base : public ACharacter, public IDamageable
 public:
 	// Sets default values for this character's properties
 	ACharacter_Base();
+
+	// interface : called on taking a hit
+	virtual void TakeDamage(uint8) override;
+
+	// returns copy of char_info
+	UFUNCTION(BlueprintCallable)
+	FCharacterInfo GetCharInfo() const;
 	
-	// 
 protected:
 
 	UPROPERTY(EditDefaultsOnly, Category = Gameplay, meta = (AllowPrivateAccess = "true"))
-	FCharacterInfo char_info;
+	FCharacterInfo CharInfo;
 
 	UPROPERTY(EditDefaultsOnly, Category = Gameplay, meta = (AllowPrivateAccess = "true"))
-	class UAnimationAsset* death_animation;
+	class UAnimationAsset* DeathAnimation;
 
 	UPROPERTY(EditDefaultsOnly, Category = Gameplay, meta = (AllowPrivateAccess = "true"))
-	float base_movement_speed = 300;
+	float BaseMovementSpeed = 300;
 
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay();
 
 	// pure virtual : called when health is reduced to 0
-	virtual void die();
+	virtual void Die();
 
 	// Called to bind functionality to input
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent);
@@ -57,17 +63,10 @@ protected:
 	/** Called for movement input */
 	void Move(const FInputActionValue& Value);
 
+private:
+	void ResetMovementSpeed();
+
 public:
-	// returns copy of char_info
-	UFUNCTION(BlueprintCallable)
-	FCharacterInfo get_char_info() const;
-
-	// interface : called on taking a hit
-	virtual void take_damage(uint8) override;
-
 	// Called every frame
 	virtual void Tick(float DeltaTime);
-
-	void reset_movement_speed();
-
 };

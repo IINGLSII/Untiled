@@ -14,9 +14,17 @@ class UInteractive : public UActorComponent
 {
 	GENERATED_BODY()
 
+	// INTERFACE
+
 	public:	
 		// Sets default values for this component's properties
 		UInteractive();
+
+		// Sets the collison used for interaction detection
+		void SetCollision(UCapsuleComponent*);
+
+		// Calling function when actor wishes to interact
+		void Interact();
 
 	protected:
 		// Called when the game starts
@@ -42,17 +50,4 @@ class UInteractive : public UActorComponent
 
 		UFUNCTION()
 		void InteractBoundaryOverlapEnd(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex);
-
-
-	public:	
-		// Called every frame
-		virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
-
-		// Sets the collison used for interaction detection
-		void SetupCollision(UCapsuleComponent*);
-
-		// Calling function when actor wishes to interact
-		void interact();
-
-		
 };

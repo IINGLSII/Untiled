@@ -5,65 +5,63 @@
 
 AWeapon_Base::AWeapon_Base()
 {
-	// Add weapon mesh
-	weapon_mesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("MESH"));
-	weapon_mesh->SetupAttachment(RootComponent);
 }
 
-void AWeapon_Base::launch_target(AActor* target, float x_force, float y_force)
+void AWeapon_Base::LaunchTarget(AActor* target, float x_force, float y_force)
 {
 	if (target->GetClass()->IsChildOf(ACharacter_Base::StaticClass())) {
-		FVector launch_vector = (target->GetActorLocation() - combat_component->GetOwner()->GetActorLocation()).GetSafeNormal()*x_force + FVector(0,0,y_force);
+		FVector launch_vector = (target->GetActorLocation() - CombatComponent->GetOwner()->GetActorLocation()).GetSafeNormal()*x_force + FVector(0,0,y_force);
 		Cast<ACharacter_Base>(target)->LaunchCharacter(launch_vector, true, false);
 	}
+	return;
+}
+
+void AWeapon_Base::Attack(TArray<FAttackInfo>* AttackInfo, AActor* attacker)
+{
+	if (CombatComponent && !(AttackInfo->IsEmpty())) {
+		ComboCounter %= AttackInfo->Num();
+		CombatComponent->OnHitDelegate.BindUFunction(this, FName("OnHit"));
+		CombatComponent->AttackResetDelegate.BindUFunction(this, FName("FinishUse"));
+		CombatComponent->AttackTrace((*AttackInfo)[ComboCounter], attacker->GetActorLocation());
+		ComboCounter++;
+	}
+	else {
+		FinishUse();
+	}
+	
 }
 
 void AWeapon_Base::Use(ACharacter_Base* caller)
 {
-	// Start attack tracing, bind On-Hit to trace
-	if (combat_component && !(weapon_info.attack_info.IsEmpty())) {
-		combo_counter %= weapon_info.attack_info.Num();
-		combat_component->on_hit_delegate.BindUFunction(this, FName("on_hit"));
-		combat_component->attack_reset_delegate.BindUFunction(this, FName("finish_use"));
-		combat_component->attack_trace(weapon_info.attack_info[combo_counter], caller->GetActorLocation());
-		combo_counter++;
-	}
-	else
-		finish_use();
+	Attack(&WeaponInfo.AttackInfo, caller);
 }
 
 void AWeapon_Base::AltUse(ACharacter_Base* caller)
 {
-	// Start attack tracing, bind On-Hit to trace
-	if (combat_component) {
-		combo_counter %= weapon_info.alt_attack_info.Num();
-		combat_component->on_hit_delegate.BindUFunction(this, FName("on_hit"));
-		combat_component->attack_trace(weapon_info.alt_attack_info[0], caller->GetActorLocation());
-		combo_counter++;
-	}
+	Attack(&WeaponInfo.AltAttackInfo, caller);
 }
 
 void AWeapon_Base::Drop(ACharacter_Base* caller)
 {
-	combat_component = NULL;
+	CombatComponent = NULL;
+	Super::Drop(caller);
 }
 
-void AWeapon_Base::interact_Implementation(AActor* instigator)
+void AWeapon_Base::Interact_Implementation(AActor* instigator)
 {
 	// pickup and set combat component ref
-	Super::interact_Implementation(instigator);
-	combat_component = Cast<UCombat>(instigator->GetComponentByClass(UCombat::StaticClass()));
+	Super::Interact_Implementation(instigator);
+	CombatComponent = Cast<UCombat>(instigator->GetComponentByClass(UCombat::StaticClass()));
 }
 
-void AWeapon_Base::on_hit_Implementation(AActor* hit_actor)
+void AWeapon_Base::OnHit_Implementation(AActor* hit_actor)
 {
 	// do damage
 	if (hit_actor->Implements<UDamageable>()) {
 		IDamageable* damageable_actor = Cast<IDamageable>(hit_actor);
-		damageable_actor->take_damage(weapon_info.damage);
+		damageable_actor->TakeDamage(WeaponInfo.Damage);
 	}
 	
 	// pushback
-	launch_target(hit_actor, 1000, 0);
+	LaunchTarget(hit_actor, 1000, 0);
 }
-

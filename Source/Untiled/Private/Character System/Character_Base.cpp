@@ -3,13 +3,14 @@
 
 #include "Character System/Character_Base.h"
 
-void ACharacter_Base::die() {
-	GetMesh()->PlayAnimation(death_animation, false);
+void ACharacter_Base::Die() {
+	GetMesh()->PlayAnimation(DeathAnimation, false);
 }
 
-FCharacterInfo ACharacter_Base::get_char_info() const
+// Returns copy of character info
+FCharacterInfo ACharacter_Base::GetCharInfo() const
 {
-	return char_info;
+	return CharInfo;
 }
 
 // Sets default values
@@ -20,15 +21,16 @@ ACharacter_Base::ACharacter_Base()
 
 }
 
-void ACharacter_Base::take_damage(uint8 damage)
+// Decrease character health, will call death if health < 0
+void ACharacter_Base::TakeDamage(uint8 Damage)
 {
-	char_info.health = char_info.health - damage > 0 ? char_info.health - damage : 0;
+	CharInfo.Health = CharInfo.Health - Damage > 0 ? CharInfo.Health - Damage : 0;
 	if (GEngine)
-		GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Yellow, FString::Printf(TEXT("Health %d"), char_info.health));
-	if (char_info.health)
+		GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Yellow, FString::Printf(TEXT("Health %d"), CharInfo.Health));
+	if (CharInfo.Health)
 		return;
 	
-	die();
+	Die();
 }
 
 // Called when the game starts or when spawned
@@ -43,9 +45,10 @@ void ACharacter_Base::Tick(float DeltaTime)
 	Super::Tick(DeltaTime);
 }
 
-void ACharacter_Base::reset_movement_speed()
+// Resets movement speed to default speed
+void ACharacter_Base::ResetMovementSpeed()
 {
-	GetCharacterMovement()->MaxWalkSpeed = base_movement_speed;
+	GetCharacterMovement()->MaxWalkSpeed = BaseMovementSpeed;
 }
 
 // Called to bind functionality to input
@@ -54,6 +57,7 @@ void ACharacter_Base::SetupPlayerInputComponent(UInputComponent* PlayerInputComp
 	Super::SetupPlayerInputComponent(PlayerInputComponent);
 }
 
+// Movement input handler
 void ACharacter_Base::Move(const FInputActionValue& Value)
 {
 	// input is a Vector2D

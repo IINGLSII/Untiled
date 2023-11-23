@@ -27,27 +27,27 @@ struct FAttackInfo {
 public:
 	// attack speed (detection % per second)
 	UPROPERTY(EditDefaultsOnly)
-	float attack_speed;
+	float AttackSpeed;
 
 	// parameter for line trace (trace distance)
 	UPROPERTY(EditDefaultsOnly)
-	float hit_detection_param1;
+	float HitDetectionParam1;
 
 	// parameter for line trace (length, trace increment)
 	UPROPERTY(EditDefaultsOnly)
-	float hit_detection_param2;
+	float HitDetectionParam2;
 
 	// time before line trace begins (after animation start)
 	UPROPERTY(EditDefaultsOnly)
-	float trace_delay;
+	float TraceDelay;
 
 	// type of trace performed for hit detection
 	UPROPERTY(EditDefaultsOnly)
-	EHitDetectionType hit_detection_type;
+	EHitDetectionType HitDetectionType;
 
 	// attack animations played
 	UPROPERTY(EditDefaultsOnly)
-	UAnimMontage* attack_anim;
+	UAnimMontage* AttackAnim;
 };
 
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
@@ -60,53 +60,54 @@ public:
 	UCombat();
 
 	// callback for when trace hits an actor
-	FOnHitDelegate on_hit_delegate;
+	FOnHitDelegate OnHitDelegate;
 
-	FAttackResetDelegate attack_reset_delegate;
+	FAttackResetDelegate AttackResetDelegate;
 
 private:
 	// Trace Collision parameters
-	FCollisionQueryParams hit_trace_params;
+	FCollisionQueryParams HitTraceParams;
 
 	// Trace Timer handler
-	FTimerHandle trace_timer_handle;
+	FTimerHandle TraceTimerHandle;
 
 	// Trace Timer Callback
-	FTimerDelegate trace_timer_delegate;
+	FTimerDelegate TraceTimerDelegate;
 
 	// Trace calls left for attack
-	int8 trace_calls_remaining;
+	int8 TraceCallsRemaining;
 
 	// whether the character is able to attack
-	bool can_attack = true;
+	bool bCanAttack = true;
 
 private:
 	// Cone Trace (radius, degrees)
 	UFUNCTION()
-		void cone_attack_trace(FAttackInfo& attack_info, float trace_param_increment, float trace_param_start);
+	void ConeAttackTrace(FAttackInfo& AttackInfo, float trace_param_increment, float trace_param_start);
+
 	// Line Trace (length)
 	UFUNCTION()
-		void line_attack_trace(FAttackInfo& attack_info, float trace_param_increment, float trace_param_start);
+	void LineAttackTrace(FAttackInfo& AttackInfo, float trace_param_increment, float trace_param_start);
+
 	// Radial Trace (radius, degrees)
 	UFUNCTION()
-		void radial_attack_trace(FAttackInfo& attack_info, float trace_param_increment, float trace_param_start);
+	void RadialAttackTrace(FAttackInfo& AttackInfo, float trace_param_increment, float trace_param_start);
+
 	// On hit registration
 	UFUNCTION()
-		void hit_registration(FHitResult& hit_result);
+	void HitRegistration(FHitResult& hit_result);
+
 	// runs trace from start to end and registers hit
-	UFUNCTION()
-		void run_trace(FVector start, FVector end_offset);
+	void RunTrace(FVector start, FVector end_offset);
 
 	// decreases traces remaining and resets attack if <= 0
-	void increment_trace();
+	void IncrementTrace();
 
 	UFUNCTION()
-		void end_attack();
+	void EndAttack();
 
 public:
-	UFUNCTION()
-	void attack_trace(FAttackInfo& attack_info, FVector location);
+	void AttackTrace(FAttackInfo& AttackInfo, FVector location);
 
-	UFUNCTION()
-	void finish_trace();
+	void FinishTrace();
 };

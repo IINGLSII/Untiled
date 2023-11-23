@@ -23,5 +23,6 @@ class IDamageable
 	// Add interface functions to this class. This is the class that will be inherited to implement this interface.
 public:
 	UFUNCTION(BlueprintCallable)
-	virtual void take_damage(uint8 damage_amount) = 0;
+	// Called when the object takes damage
+	virtual void TakeDamage(uint8 damage_amount) = 0;
 };

@@ -24,5 +24,6 @@ class IInteractable
 	// Add interface functions to this class. This is the class that will be inherited to implement this interface.
 public:
 	UFUNCTION(BlueprintNativeEvent)
-	void interact(AActor* instigator);
+	// Called when the object is interacted with
+	void Interact(AActor* instigator);
 };

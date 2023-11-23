@@ -6,54 +6,48 @@
 // Sets default values
 AItem_Base::AItem_Base()
 {
- 	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
-	PrimaryActorTick.bCanEverTick = true;
-
+	// Add item mesh
+	ItemMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("MESH"));
+	ItemMesh->SetupAttachment(RootComponent);
 }
 
 // Called when the game starts or when spawned
 void AItem_Base::BeginPlay()
 {
 	Super::BeginPlay();
-	
 }
 
-EGripType AItem_Base::get_grip_type()
+EGripType AItem_Base::GetGripType()
 {
-	return grip_type;
+	return GripType;
 }
 
-// Called every frame
-void AItem_Base::Tick(float DeltaTime)
+void AItem_Base::Interact_Implementation(AActor* instigator)
 {
-	Super::Tick(DeltaTime);
-
-}
-
-void AItem_Base::interact_Implementation(AActor* instigator)
-{
-	UEquipable* inventory = Cast<UEquipable>(instigator->GetComponentByClass(UEquipable::StaticClass()));
+	ItemMesh->SetSimulatePhysics(false);
+	ItemMesh->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+	UInventory* inventory = Cast<UInventory>(instigator->GetComponentByClass(UInventory::StaticClass()));
 	if (inventory) {
-		inventory->equip_item(this);
+		inventory->StoreItem(this);
 	}
-	inventory->set_grip_type(grip_type);
-	
 }
 
 void AItem_Base::Use(ACharacter_Base* caller)
 {
-	finish_use();
+	FinishUse();
 }
 
 void AItem_Base::AltUse(ACharacter_Base* caller)
 {
-	finish_use();
+	FinishUse();
 }
 
 void AItem_Base::Drop(ACharacter_Base* caller)
 {
+	ItemMesh->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
+	ItemMesh->SetSimulatePhysics(true);
 }
 
-void AItem_Base::finish_use() {
-	item_finish_delegate.ExecuteIfBound();
+void AItem_Base::FinishUse() {
+	ItemFinishDelegate.Execute();
 }

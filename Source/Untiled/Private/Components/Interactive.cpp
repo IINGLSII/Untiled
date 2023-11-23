@@ -21,7 +21,7 @@ void UInteractive::BeginPlay()
 }
 
 // Setup Interactable Boundary
-void UInteractive::SetupCollision(UCapsuleComponent* collision) {
+void UInteractive::SetCollision(UCapsuleComponent* collision) {
 	collision->SetCollisionProfileName("Trigger");
 	collision->OnComponentBeginOverlap.AddDynamic(this, &UInteractive::InteractBoundaryOverlapBegin);
 	collision->OnComponentEndOverlap.AddDynamic(this, &UInteractive::InteractBoundaryOverlapEnd);
@@ -43,6 +43,8 @@ void UInteractive::removeInteractable(IInteractable* object)
 // Add Interactable Object To Set
 void UInteractive::addInteractable(IInteractable* object)
 {
+	if (GEngine)
+		GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Yellow, FString::Printf(TEXT("item")));
 	interactables.Add(object);
 	// set interact object to most recently added object
 	if (!interact_object)
@@ -50,11 +52,10 @@ void UInteractive::addInteractable(IInteractable* object)
 }
 
 // Command to interact with object
-void UInteractive::interact()
+void UInteractive::Interact()
 {
 	if (interact_object) {
-		IInteractable::Execute_interact(Cast<UObject>(interact_object), Cast<ACharacter_Base>(GetOwner()));
-		removeInteractable(interact_object);
+		IInteractable::Execute_Interact(Cast<UObject>(interact_object), Cast<ACharacter_Base>(GetOwner()));
 	}
 }
 
@@ -76,13 +77,3 @@ void UInteractive::InteractBoundaryOverlapEnd(UPrimitiveComponent* OverlappedCom
 			removeInteractable(interactable_object);
 	}
 }
-
-
-// Called every frame
-void UInteractive::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
-{
-	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
-
-	// ...
-}
-

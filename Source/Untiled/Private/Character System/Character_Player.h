@@ -7,6 +7,7 @@
 #include "InputActionValue.h"
 #include "Components/Interactive.h"
 #include "Components/Combat.h"
+#include "Components/Action.h"
 #include "Items/Item_Base.h"
 #include "Camera/CameraComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
@@ -17,6 +18,8 @@
 /**
  * 
  */
+
+DECLARE_DELEGATE_OneParam(FActionDelegate, const FInputActionValue& Value)
 
 UCLASS()
 class ACharacter_Player : public ACharacter_Base
@@ -41,13 +44,16 @@ class ACharacter_Player : public ACharacter_Base
 
 	/** Interact Component */
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Gameplay, meta = (AllowPrivateAccess = "true"))
-		class UEquipable* Equipment;
+		class UInventory* Inventory;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Gameplay, meta = (AllowPrivateAccess = "true"))
+		class UAction* ActionManager;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Gameplay, meta = (AllowPrivateAccess = "true"))
 		class UCapsuleComponent* InteractionBoundary;
 
 	UPROPERTY(EditDefaultsOnly, Category = Gameplay, meta = (AllowPrivateAccess = "true"))
-		UAnimMontage* dodge_animation;
+		UAnimMontage* DodgeAnimation;
 
 	/** MappingContext */
 	UPROPERTY(EditDefaultsOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
@@ -84,67 +90,54 @@ class ACharacter_Player : public ACharacter_Base
 	/** Item Drop Input Action */
 	UPROPERTY(EditDefaultsOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
 		class UInputAction* ItemDropAction;
-
-	protected:
-	/* Item stored in item slot 1*/
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Items)
-		AItem_Base* item_slot1;
-
-	/* Item stored in item slot 2*/
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Items)
-		AItem_Base* item_slot2;
-
-	private:
-	UPROPERTY()
-		bool bcan_act = true;
-
-		FTimerDelegate action_cooldown_delegate;
-		FTimerHandle action_cooldown;
-
+		
 	public:
 		ACharacter_Player();
 
-		// Delegate functions from Inventory
+		// Inventory management functions
 		UFUNCTION()
-		void equip_item(AItem_Base* item);
+		void OnEquipItem(AItem_Base* item, uint8 ItemIndex);
 
 		UFUNCTION()
-		void drop_item(AItem_Base* item);
+		void OnDropItem(AItem_Base* item, uint8 ItemIndex);
+
+		
 
 	protected:
 
 		/** Called for attack input */
+		UFUNCTION()
 		void Use(const FInputActionValue& Value);
 
 		/** Called for alt attack input */
+		UFUNCTION()
 		void AltUse(const FInputActionValue& Value);
 
 		/** Called for dodge input */
+		UFUNCTION()
 		void Dodge(const FInputActionValue& Value);
+		
+		/** Called for interact input */
+		UFUNCTION()
+		void ItemDrop(const FInputActionValue& Value);
 
 		/** Called for left item select input */
+		UFUNCTION()
 		void LeftItemSelect(const FInputActionValue& Value);
 
 		/** Called for right iten select input */
+		UFUNCTION()
 		void RightItemSelect(const FInputActionValue& Value);
 
-		/** Called for interact input */
-		void ItemDrop(const FInputActionValue& Value);
+		/*  Called on attempting to interact with object */
+		UFUNCTION()
+		void Interact(const FInputActionValue& Value);
 
-
-	protected:
 		// APawn interface
 		virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 
 		// To add mapping context
 		virtual void BeginPlay() override;
-
-		// Called when any item is selected
-		void ItemSelect(AItem_Base** item, FName socketName);
-
-	private:
-		UFUNCTION()
-		void finish_action();
 
 	public:
 		/** Returns CameraBoom subobject **/

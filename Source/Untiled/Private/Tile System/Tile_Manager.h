@@ -9,8 +9,8 @@
 #include "Tile.h"
 #include "Tile_Manager.generated.h"
 
-#define GRID_DIM 3
-#define TILE_SIZE 1200
+constexpr int GRID_DIM = 3;
+constexpr float TILE_SIZE = 1200;
 
 USTRUCT(BlueprintType) 
 struct FRow : public FTableRowBase 
@@ -19,7 +19,7 @@ struct FRow : public FTableRowBase
 
 public:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
-	TArray<float> vector;
+	TArray<float> Vector;
 };
 
 UCLASS()
@@ -34,15 +34,15 @@ public:
 protected:
 	// class of tiles to be spawned
 	UPROPERTY(EditAnywhere)
-		TSubclassOf <class ATile> TileBP;
+		TSubclassOf <class ATile> TileBp;
 
 private:
 	// array of tiles representing DIM x DIM grid
 	UPROPERTY()
-		TArray<ATile*> grid_array;
+		TArray<ATile*> GridArray;
 
 	// tile information from which new tile information will be generated
-	tile_data_t parent_generator_information;
+	tile_data_t ParentGeneratorInformation;
 
 	// PROBABILITY MATRICES
 	Eigen::MatrixXf ENVxPREV_ENV_M;
@@ -56,41 +56,41 @@ private:
 
 // INTERNAL FUNCTIONS
 	// gets tiles at r/c offset of a given array of tiles
-	ATile* get_tile(FOffset offset, const TArray<ATile*>& arr) const;
+	ATile* GetTile(FOffset offset, const TArray<ATile*>& arr) const;
 
 	// sets tiles at r/c offset of a given array of tiles
-	void set_tile(FOffset offset, ATile* tile, TArray<ATile*>& arr);
+	void SetTile(FOffset offset, ATile* tile, TArray<ATile*>& arr);
 
-	// spawn tile at r/c offset at grid_array
-	void spawn_tile(FOffset offset);
+	// spawn tile at r/c offset at GridArray
+	void SpawnTile(FOffset offset);
 
 	// calculate new random tile information and load it into given tile. Calls tile update method.
-	void generate_tile(ATile* tile);
+	void GenerateTile(ATile* tile);
 
 	// reads tile data from data table and initalize markov matrix data
-	void init_matrix_from_data(Eigen::MatrixXf* matrix, const TCHAR* utable_ref, int num_row, int num_col);
+	void InitMatrixFromData(Eigen::MatrixXf* matrix, const TCHAR* utable_ref, int num_row, int num_col);
 
 	// move data table information to matrix
-	void convert_data_table_to_matrix(Eigen::MatrixXf* M, UDataTable* T);
+	void ConvertDataTableToMatrix(Eigen::MatrixXf* M, UDataTable* T);
 
 	// read all the utable transition matrix data and store it in the appropirate matrix
-	void read_data();
+	void ReadData();
 
-	int make_random_selection(Eigen::VectorXf* probability_vector);
+	int MakeRandomSelection(Eigen::VectorXf* probability_vector);
 
-	void pnormalize_vector(Eigen::VectorXf* vector);
+	void PNormalizeVector(Eigen::VectorXf* vector);
 
 
 
 // PURE FUNCTIONS
 	// return if given offset is within valid range
-	bool validate_offset(FOffset offset) const;
+	bool ValidateOffset(FOffset offset) const;
 
 	// convert offset from center to array index
-	int convert_FOffseto_idx(FOffset offset) const;
+	int ConvertFOffsetoIdx(FOffset offset) const;
 
 	// convert array index to offset from center
-	FOffset convert_idx_to_offset(int index) const;
+	FOffset ConvertIdxToOffset(int index) const;
 	
 
 protected:
@@ -102,20 +102,20 @@ public:
 
 // INTERFACE FUNCTIONS
 
-	// returns tile at a given row/columb offset from grid_array
+	// returns tile at a given row/columb offset from GridArray
 	UFUNCTION()
-		ATile* get_tile(FOffset offset) const;
+		ATile* GetTile(FOffset offset) const;
 
-	// returns tile at specific index of the grid_array
+	// returns tile at specific index of the GridArray
 	UFUNCTION()
-		ATile* get_tile_by_index(uint32 index) const;
+		ATile* GetTileByIndex(uint32 index) const;
 
 	// cull/update/spawn tiles according to a new given position.
 	UFUNCTION(BlueprintCallable)
-		void update_grid(FVector location);
+		void UpdateGrid(FVector location);
 
-	// spawns tiles in all empty indicies of grid_array, if flush is true, it will reintialize the whole list with new chunks.
+	// spawns tiles in all empty indicies of GridArray, if flush is true, it will reintialize the whole list with new chunks.
 	UFUNCTION(BlueprintCallable)
-		void populate_grid(bool flush_array);
+		void PopulateGrid(bool flush_array);
 
 };
