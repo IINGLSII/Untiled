@@ -17,23 +17,23 @@ struct FOffset
 	GENERATED_BODY()
 
 	FOffset() {
-		row = 0;
-		col = 0;
+		Row = 0;
+		Col = 0;
 	}
 
 	FOffset(int r, int c) {
-		row = r;
-		col = c;
+		Row = r;
+		Col = c;
 	}
 
 	UPROPERTY()
-		int row;
+		int Row;
 
 	UPROPERTY()
-		int col;
+		int Col;
 
 	friend bool operator==(FOffset OffsetA, FOffset OffsetB) {
-		return ((OffsetA.col == OffsetB.col) && (OffsetA.row == OffsetB.row));
+		return ((OffsetA.Col == OffsetB.Col) && (OffsetA.Row == OffsetB.Row));
 	}
 
 	friend bool operator!=(FOffset OffsetA, FOffset OffsetB) {
@@ -51,11 +51,11 @@ public:
 	ATile();
 
 	// returns vector of tile information
-	tile_data_t get_tile_data();
+	tile_data_t GetTileData();
 	
 private:
 	// Vector containing the randomly generated tile information
-	tile_data_t tile_data;
+	tile_data_t TileData;
 	
 
 protected:
@@ -64,17 +64,17 @@ protected:
 
 	// End to end tile size
 	UPROPERTY(BlueprintReadOnly)
-	float tile_size;
+	float TileSize;
 
 	// Blueprint readable tile data container
 	UPROPERTY(BlueprintReadOnly)
-	TArray<uint8> tile_state;
+	TArray<uint8> TileState;
 
 public:	
 
 	UFUNCTION()
-	FOffset get_player_offset(FVector loc) const;
+	FOffset GetPlayerOffset(FVector loc) const;
 
 	// Set the values off parameters before BeginPlay is called
-	void init(tile_data_t, float);
+	void Init(tile_data_t, float);
 };
