@@ -95,11 +95,11 @@ void ACharacter_Player::AltUse(const FInputActionValue& Value)
 }
 
 //// Input Action Event: called when player attempts to dodge
-void ACharacter_Player::Dodge(const FInputActionValue& Value)
+void ACharacter_Player::Dodge_Implementation(const FInputActionValue& Value)
 {
+	GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Yellow, TEXT("Your Message"));
 	if (ActionManager->StartAction(FName("Dodge"), Value)) {
 		SetActorRotation(GetCharacterMovement()->GetLastInputVector().Rotation());
-		PlayAnimMontage(DodgeAnimation);
 		ActionManager->FinishActionTimer(0.5);
 	}
 }
@@ -126,6 +126,16 @@ void ACharacter_Player::Interact(const FInputActionValue& Value)
 		Interactive->Interact();
 		ActionManager->FinishAction();
 	}
+}
+
+void ACharacter_Player::PlayMontage_Implementation(UAnimMontage Animation)
+{
+	PlayMontageRPC(Animation);
+}
+
+void ACharacter_Player::PlayMontageRPC(UAnimMontage AnimationMontage)
+{
+	PlayAnio
 }
 
 // Input Action Event: called when player attempts to drop currently equipped item

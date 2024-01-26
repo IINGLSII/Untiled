@@ -133,6 +133,12 @@ class ACharacter_Player : public ACharacter_Base
 		UFUNCTION()
 		void Interact(const FInputActionValue& Value);
 
+		UFUNCTION(Server, Unreliable)
+		void PlayMontage(UAnimMontage Animation);
+
+		UFUNCTION(NetMulticast, Unreliable)
+		void PlayMontageRPC(UAnimMontage Animation);
+
 		// APawn interface
 		virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 

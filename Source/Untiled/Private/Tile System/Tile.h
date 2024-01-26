@@ -39,6 +39,20 @@ struct FOffset
 	friend bool operator!=(FOffset OffsetA, FOffset OffsetB) {
 		return !(OffsetA == OffsetB);
 	}
+
+	friend FOffset operator-(FOffset Offset) {
+		FOffset NegativeOffset = Offset;
+		NegativeOffset.Col = -NegativeOffset.Col;
+		NegativeOffset.Row = -NegativeOffset.Row;
+		return NegativeOffset;
+	}
+
+	friend FOffset operator-(FOffset OffsetA, FOffset OffsetB) {
+		FOffset Difference;
+		Difference.Col = OffsetA.Col-OffsetB.Col;
+		Difference.Row = OffsetA.Row - OffsetB.Row;
+		return Difference;
+	}
 };
 
 UCLASS()
@@ -56,7 +70,8 @@ public:
 private:
 	// Vector containing the randomly generated tile information
 	tile_data_t TileData;
-	
+
+	int8 Owners = 0;
 
 protected:
 	// Called when the game starts or when spawned
@@ -67,14 +82,29 @@ protected:
 	float TileSize;
 
 	// Blueprint readable tile data container
-	UPROPERTY(BlueprintReadOnly)
+	UPROPERTY(BlueprintReadOnly, ReplicatedUsing=Update)
 	TArray<uint8> TileState;
+	
+
+protected:
+	virtual void GetLifetimeReplicatedProps(TArray< FLifetimeProperty >& OutLifetimeProps) const override;
 
 public:	
 
 	UFUNCTION()
-	FOffset GetPlayerOffset(FVector loc) const;
+	FOffset GetOffset(FVector loc) const;
+
+	UFUNCTION(BlueprintImplementableEvent)
+	void Update();
 
 	// Set the values off parameters before BeginPlay is called
 	void Init(tile_data_t, float);
+
+	char GetOwners();
+
+	void MarkAsOwner(uint8 PlayerIndex);
+
+	void UnmarkAsOwner(uint8 PlayerIndex);
+
+	bool IsOwner(uint8 PlayerIndex) const;
 };

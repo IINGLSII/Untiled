@@ -2,11 +2,13 @@
 
 
 #include "Tile System/Tile.h"
+#include "Net/UnrealNetwork.h"
 
 // Sets default values
 ATile::ATile()
 {
 	TileData.setZero();
+	bReplicates = true;
 	TileSize = 0;
 	TileState.Init(0, NUM_FEATURES);
 }
@@ -27,8 +29,32 @@ void ATile::Init(tile_data_t data, float size) {
 	
 }
 
-// returns the chunk offset of a given location, bool indicates axis (1 = X, 0 = Y)
-FOffset ATile::GetPlayerOffset(FVector loc) const
+char ATile::GetOwners()
+{
+	return Owners;
+}
+
+void ATile::MarkAsOwner(uint8 PlayerIndex)
+{
+	Owners |= (1 << PlayerIndex);
+}
+
+void ATile::UnmarkAsOwner(uint8 PlayerIndex)
+{
+	Owners &= ~(1 << PlayerIndex);
+	if (!Owners)
+		Destroy();
+}
+
+bool ATile::IsOwner(uint8 PlayerIndex) const
+{
+	verify(PlayerIndex < 8);
+
+	return Owners & (1 << PlayerIndex);
+}
+
+
+FOffset ATile::GetOffset(FVector loc) const
 {
 	FVector position_offset;
 	FOffset tile_offset = FOffset(0, 0);
@@ -52,4 +78,9 @@ FOffset ATile::GetPlayerOffset(FVector loc) const
 
 tile_data_t ATile::GetTileData() {
 	return TileData;
+}
+
+void ATile::GetLifetimeReplicatedProps(TArray< FLifetimeProperty >& OutLifetimeProps) const
+{
+	DOREPLIFETIME(ATile, TileState);
 }
